@@ -1,0 +1,10 @@
+[package]
+name = "later"
+version = "0.1.0"
+edition = "2021"
+
+[features]
+async = ["smol"]
+
+[dependencies]
+smol = { version = "1.2.5", optional = true }
