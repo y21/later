@@ -18,7 +18,6 @@ fn main() {
 
 ## Limitations
 - Only one defer per scope
-- Carried types must implement Clone
 
 ## Accessing local variables
 The code snippet above shows how the defer macro can be used for running "freestanding" code (no access to locals), however sometimes access to local variables is needed.
@@ -37,3 +36,20 @@ fn main() {
 }
 ```
 > Note: Async blocks requires the `async` feature. Enabling it in turn disables `no_std` support.
+
+## Capture semantics
+When capturing variables from the enclosing environment, they are **cloned** by default.
+You can specify the `move` keyword in front of the closure to move them rather than cloning, like so:
+```rs
+fn main() {
+    let foo = String::from("bar");
+
+    //            vvvv
+    later::defer!(move |foo: String| {
+        println!("{foo}");
+    });
+
+    print!("-> ");
+}
+```
+If you now try to use `foo` after it's been moved into the `defer`, compilation will fail.

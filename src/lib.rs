@@ -32,10 +32,23 @@ macro_rules! defer {
     (|$($var:ident : $t:ty),*| async $code:expr) => {
         $crate::defer_async!(|$($var: $t),*| async $code);
     };
+    (move |$($var:ident : $t:ty),*| $code:expr) => {
+        struct GeneratedDropGuardDoNotUseThis {
+            $(#[allow(dead_code)] $var: ::core::option::Option<$t>),*
+        }
+        impl ::core::ops::Drop for GeneratedDropGuardDoNotUseThis {
+            fn drop(&mut self) {
+                $(let $var = self.$var.take().unwrap();)*
+                $code
+            }
+        }
+        let _drop_guard = GeneratedDropGuardDoNotUseThis {
+            $($var: ::core::option::Option::Some($var)),*
+        };
+        let _drop_guard = ::core::pin::Pin::new(&_drop_guard);
+    };
     (|$($var:ident : $t:ty),*| $code:expr) => {
         struct GeneratedDropGuardDoNotUseThis {
-            // Wrapping the type in Option allows access to owned $t in Drop code
-            // This is required because Drop::drop takes &mut self, so we cannot move out of it
             $(#[allow(dead_code)] $var: ::core::option::Option<$t>),*
         }
         impl ::core::ops::Drop for GeneratedDropGuardDoNotUseThis {
@@ -63,7 +76,7 @@ mod tests {
     #[test]
     fn simple() {
         let x = 32;
-        defer!(|x: i32| {
+        defer!(move |x: i32| {
             println!("World - {}", x);
         });
         println!("Hello");
