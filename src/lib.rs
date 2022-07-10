@@ -28,7 +28,7 @@ macro_rules! defer_async {
 
 #[macro_export]
 macro_rules! defer {
-    (|| $code:expr) => { defer!(| | $code); };
+    (|| $code:expr) => { $crate::defer!(| | $code); };
     (|$($var:ident : $t:ty),*| async $code:expr) => {
         $crate::defer_async!(|$($var: $t),*| async $code);
     };
